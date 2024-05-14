@@ -185,30 +185,30 @@ export class SlackApp<E extends SlackEdgeAppEnv | SlackSocketModeAppEnv> {
   // Enabled listener functions
   // --------------------------
 
-  #slashCommands: ((
+  protected $slashCommands: ((
     body: SlackRequestBody,
   ) => SlackMessageHandler<E, SlashCommand> | null)[] = [];
-  #events: ((
+  protected $events: ((
     body: SlackRequestBody,
   ) => SlackHandler<E, SlackEvent<string>> | null)[] = [];
-  #globalShorcuts: ((
+  protected $globalShorcuts: ((
     body: SlackRequestBody,
   ) => SlackHandler<E, GlobalShortcut> | null)[] = [];
-  #messageShorcuts: ((
+  protected $messageShorcuts: ((
     body: SlackRequestBody,
   ) => SlackHandler<E, MessageShortcut> | null)[] = [];
-  #blockActions: ((body: SlackRequestBody) => SlackHandler<
+  protected $blockActions: ((body: SlackRequestBody) => SlackHandler<
     E,
     // deno-lint-ignore no-explicit-any
     BlockAction<any>
   > | null)[] = [];
-  #blockSuggestions: ((
+  protected $blockSuggestions: ((
     body: SlackRequestBody,
   ) => SlackOptionsHandler<E, BlockSuggestion> | null)[] = [];
-  #viewSubmissions: ((
+  protected $viewSubmissions: ((
     body: SlackRequestBody,
   ) => SlackViewHandler<E, ViewSubmission> | null)[] = [];
-  #viewClosed: ((
+  protected $viewClosed: ((
     body: SlackRequestBody,
   ) => SlackViewHandler<E, ViewClosed> | null)[] = [];
 
@@ -301,7 +301,7 @@ export class SlackApp<E extends SlackEdgeAppEnv | SlackSocketModeAppEnv> {
     lazy: SlashCommandLazyHandler<E> = noopLazyHandler,
   ): SlackApp<E> {
     const handler: SlackMessageHandler<E, SlashCommand> = { ack, lazy };
-    this.#slashCommands.push((body) => {
+    this.$slashCommands.push((body) => {
       if (body.type || !body.command) {
         return null;
       }
@@ -330,7 +330,7 @@ export class SlackApp<E extends SlackEdgeAppEnv | SlackSocketModeAppEnv> {
     callbackId: FunctionExecutedEventCallbackIdPattern,
     lazy: EventLazyHandler<"function_executed", E>,
   ) {
-    this.#events.push((body) => {
+    this.$events.push((body) => {
       if (
         body.type !== PayloadType.EventsAPI ||
         !body.event ||
@@ -369,7 +369,7 @@ export class SlackApp<E extends SlackEdgeAppEnv | SlackSocketModeAppEnv> {
     event: Type,
     lazy: EventLazyHandler<Type, E>,
   ): SlackApp<E> {
-    this.#events.push((body) => {
+    this.$events.push((body) => {
       if (body.type !== PayloadType.EventsAPI || !body.event) {
         return null;
       }
@@ -401,7 +401,7 @@ export class SlackApp<E extends SlackEdgeAppEnv | SlackSocketModeAppEnv> {
     pattern: MessageEventPattern,
     lazy: MessageEventLazyHandler<E>,
   ): SlackApp<E> {
-    this.#events.push((body) => {
+    this.$events.push((body) => {
       if (
         body.type !== PayloadType.EventsAPI ||
         !body.event ||
@@ -461,7 +461,7 @@ export class SlackApp<E extends SlackEdgeAppEnv | SlackSocketModeAppEnv> {
     lazy: GlobalShortcutLazyHandler<E> = noopLazyHandler,
   ): SlackApp<E> {
     const handler: SlackHandler<E, GlobalShortcut> = { ack, lazy };
-    this.#globalShorcuts.push((body) => {
+    this.$globalShorcuts.push((body) => {
       if (body.type !== PayloadType.GlobalShortcut || !body.callback_id) {
         return null;
       }
@@ -492,7 +492,7 @@ export class SlackApp<E extends SlackEdgeAppEnv | SlackSocketModeAppEnv> {
     lazy: MessageShortcutLazyHandler<E> = noopLazyHandler,
   ): SlackApp<E> {
     const handler: SlackHandler<E, MessageShortcut> = { ack, lazy };
-    this.#messageShorcuts.push((body) => {
+    this.$messageShorcuts.push((body) => {
       if (body.type !== PayloadType.MessageShortcut || !body.callback_id) {
         return null;
       }
@@ -530,7 +530,7 @@ export class SlackApp<E extends SlackEdgeAppEnv | SlackSocketModeAppEnv> {
     lazy: BlockActionLazyHandler<T, E, A> = noopLazyHandler,
   ): SlackApp<E> {
     const handler: SlackHandler<E, A> = { ack, lazy };
-    this.#blockActions.push((body) => {
+    this.$blockActions.push((body) => {
       if (
         body.type !== PayloadType.BlockAction ||
         !body.actions ||
@@ -580,7 +580,7 @@ export class SlackApp<E extends SlackEdgeAppEnv | SlackSocketModeAppEnv> {
     // Note that block_suggestion response must be done within 3 seconds.
     // So, we don't support the lazy handler for it.
     const handler: SlackOptionsHandler<E, BlockSuggestion> = { ack };
-    this.#blockSuggestions.push((body) => {
+    this.$blockSuggestions.push((body) => {
       if (body.type !== PayloadType.BlockSuggestion || !body.action_id) {
         return null;
       }
@@ -637,7 +637,7 @@ export class SlackApp<E extends SlackEdgeAppEnv | SlackSocketModeAppEnv> {
     lazy: ViewSubmissionLazyHandler<E> = noopLazyHandler,
   ): SlackApp<E> {
     const handler: SlackViewHandler<E, ViewSubmission> = { ack, lazy };
-    this.#viewSubmissions.push((body) => {
+    this.$viewSubmissions.push((body) => {
       if (body.type !== PayloadType.ViewSubmission || !body.view) {
         return null;
       }
@@ -671,7 +671,7 @@ export class SlackApp<E extends SlackEdgeAppEnv | SlackSocketModeAppEnv> {
     lazy: ViewClosedLazyHandler<E> = noopLazyHandler,
   ): SlackApp<E> {
     const handler: SlackViewHandler<E, ViewClosed> = { ack, lazy };
-    this.#viewClosed.push((body) => {
+    this.$viewClosed.push((body) => {
       if (body.type !== PayloadType.ViewClosed || !body.view) {
         return null;
       }
@@ -858,7 +858,7 @@ export class SlackApp<E extends SlackEdgeAppEnv | SlackSocketModeAppEnv> {
           payload: body.event,
           ...baseRequest,
         };
-        for (const matcher of this.#events) {
+        for (const matcher of this.$events) {
           const handler = matcher(payload);
           if (handler) {
             if (!this.startLazyListenerAfterAck) {
@@ -882,7 +882,7 @@ export class SlackApp<E extends SlackEdgeAppEnv | SlackSocketModeAppEnv> {
           payload: body as SlashCommand,
           ...baseRequest,
         };
-        for (const matcher of this.#slashCommands) {
+        for (const matcher of this.$slashCommands) {
           const handler = matcher(payload);
           if (handler) {
             if (!this.startLazyListenerAfterAck) {
@@ -906,7 +906,7 @@ export class SlackApp<E extends SlackEdgeAppEnv | SlackSocketModeAppEnv> {
           payload: body as GlobalShortcut,
           ...baseRequest,
         };
-        for (const matcher of this.#globalShorcuts) {
+        for (const matcher of this.$globalShorcuts) {
           const handler = matcher(payload);
           if (handler) {
             if (!this.startLazyListenerAfterAck) {
@@ -930,7 +930,7 @@ export class SlackApp<E extends SlackEdgeAppEnv | SlackSocketModeAppEnv> {
           payload: body as MessageShortcut,
           ...baseRequest,
         };
-        for (const matcher of this.#messageShorcuts) {
+        for (const matcher of this.$messageShorcuts) {
           const handler = matcher(payload);
           if (handler) {
             if (!this.startLazyListenerAfterAck) {
@@ -956,7 +956,7 @@ export class SlackApp<E extends SlackEdgeAppEnv | SlackSocketModeAppEnv> {
           payload: body as BlockAction<any>,
           ...baseRequest,
         };
-        for (const matcher of this.#blockActions) {
+        for (const matcher of this.$blockActions) {
           const handler = matcher(payload);
           if (handler) {
             if (!this.startLazyListenerAfterAck) {
@@ -980,7 +980,7 @@ export class SlackApp<E extends SlackEdgeAppEnv | SlackSocketModeAppEnv> {
           payload: body as BlockSuggestion,
           ...baseRequest,
         };
-        for (const matcher of this.#blockSuggestions) {
+        for (const matcher of this.$blockSuggestions) {
           const handler = matcher(payload);
           if (handler) {
             // Note that the only way to respond to a block_suggestion request
@@ -1001,7 +1001,7 @@ export class SlackApp<E extends SlackEdgeAppEnv | SlackSocketModeAppEnv> {
           payload: body as ViewSubmission,
           ...baseRequest,
         };
-        for (const matcher of this.#viewSubmissions) {
+        for (const matcher of this.$viewSubmissions) {
           const handler = matcher(payload);
           if (handler) {
             if (!this.startLazyListenerAfterAck) {
@@ -1025,7 +1025,7 @@ export class SlackApp<E extends SlackEdgeAppEnv | SlackSocketModeAppEnv> {
           payload: body as ViewClosed,
           ...baseRequest,
         };
-        for (const matcher of this.#viewClosed) {
+        for (const matcher of this.$viewClosed) {
           const handler = matcher(payload);
           if (handler) {
             if (!this.startLazyListenerAfterAck) {
