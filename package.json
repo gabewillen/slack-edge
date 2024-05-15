@@ -8,7 +8,8 @@
     "build:clean": "rm -rf ./dist && tsc",
     "format": "npx prettier --write src/ test/",
     "test": "npm run format && npx vitest",
-    "ci-test": "npx vitest run --coverage"
+    "ci-test": "npx vitest run --coverage",
+    "postinstall": "npm build"
   },
   "repository": {
     "type": "git",
